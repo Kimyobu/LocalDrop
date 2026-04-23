@@ -1,0 +1,55 @@
+appId: com.localdrop.app
+productName: LocalDrop
+
+directories:
+  buildResources: resources
+  output: dist
+
+files:
+  - "**/*"
+  - "!**/.vscode/*"
+  - "!src/*"
+  - "!electron.vite.config.*"
+  - "!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}"
+  - "!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}"
+
+# Native modules ต้องอยู่นอก asar — ไม่งั้น sharp/canvas load ไม่ได้
+asarUnpack:
+  - "node_modules/sharp/**/*"
+  - "node_modules/@img/**/*"
+  - "node_modules/canvas/**/*"
+  - "node_modules/pdf-to-img/**/*"
+
+win:
+  executableName: LocalDrop
+  icon: resources/icon.png
+  target:
+    - target: nsis
+      arch:
+        - x64        # บังคับ 64-bit ตรงนี้แก้ปัญหา Wine i386 vs x64
+
+nsis:
+  artifactName: "LocalDrop-Setup-${version}.${ext}"
+  shortcutName: LocalDrop
+  uninstallDisplayName: LocalDrop
+  createDesktopShortcut: always
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+
+linux:
+  icon: resources/icon.png
+  target:
+    - AppImage
+  maintainer: localdrop
+  category: Utility
+
+mac:
+  target:
+    - dmg
+  entitlementsInherit: build/entitlements.mac.plist
+
+extraResources:
+  - from: files
+    to: files
+    filter:
+      - "**/.gitkeep"

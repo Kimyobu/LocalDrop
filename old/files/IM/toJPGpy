@@ -1,0 +1,21 @@
+import os
+from PIL import Image
+import pillow_heif
+
+# Enable HEIC support
+pillow_heif.register_heif_opener()
+
+# Folder containing HEIC files
+folder_path = "./"
+
+for filename in os.listdir(folder_path):
+    if filename.lower().endswith(".heic"):
+        heic_path = os.path.join(folder_path, filename)
+        jpg_name = os.path.splitext(filename)[0] + ".jpg"
+        jpg_path = os.path.join(folder_path, jpg_name)
+
+        # Open and convert
+        image = Image.open(heic_path)
+        image.convert("RGB").save(jpg_path, "JPEG")
+
+        print(f"Converted: {filename} → {jpg_name}")

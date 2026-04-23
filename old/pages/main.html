@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='_main.css') }}">
+    <title>Upload to your computer</title>
+</head>
+<body>
+<input id="input" type="file" multiple>
+<div class="overlay">
+    <div class="spinner">
+        <div></div>   
+        <div></div>    
+        <div></div>    
+        <div></div>    
+        <div></div>    
+        <div></div>    
+        <div></div>    
+        <div></div>    
+        <div></div>    
+        <div></div>    
+    </div>
+</div>
+<script src="{{ url_for('static', filename='_main.js') }}" type="module"></script>
+</body>
+</html>

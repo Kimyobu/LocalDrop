@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+venv/
+
+# Build outputs
+dist/
+build/
+out/
+*.exe
+*.apk
+*.rar
+
+# Electron
+desktop/out/
+desktop/dist/
+
+# Uploaded files (keep directory, ignore contents)
+desktop/files/*
+!desktop/files/.gitkeep
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python (legacy)
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+npm-debug.log*

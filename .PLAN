@@ -1,0 +1,49 @@
+# 📝 แผนการพัฒนา — LocalDrop v2
+
+## สถานะ: 🟢 Phase 4 เสร็จแล้ว — พร้อมทดสอบ
+
+## สรุปโปรเจค
+- **ชื่อ:** LocalDrop
+- **Tech:** Node.js + TypeScript ทั้งหมด
+- **Desktop:** Electron + Vite + React + Express
+- **Mobile:** Expo React Native (SDK 54)
+- **Theme:** #00B2FF → #FFFFFF fade gradient
+
+## Phases
+1. ✅ Phase 0 — วางแผน
+2. ✅ Phase 1 — Desktop Server Core
+3. ✅ Phase 2 — Desktop GUI Polish
+4. ✅ Phase 3 — Mobile App
+5. ✅ **Phase 4 — Package & Ship**
+    - ✅ Desktop: `electron-vite build` → production build สำเร็จ
+    - ✅ Desktop: `electron-builder` → **LocalDrop-1.0.0.AppImage** (105MB)
+    - ✅ Mobile: EAS config (`eas.json`) — พร้อม build APK
+    - ✅ EAS CLI v18.7.0 ติดตั้งแล้ว
+    - ✅ **Documentation:** จัดทำ `build_instructions.md` สำหรับ .exe, .AppImage, .apk เรียบร้อย
+    - ✅ **App Icon:** ติดตั้งไอคอนใหม่ (`localdrop_app_icon.svg`) ให้ทั้ง Desktop และ Mobile ครบทุกขนาด
+    - ⚠️ Mobile APK: ต้อง `eas login` + `eas build` (ต้องมี Expo account)
+    - ⚠️ AppImage ต้อง `libfuse2` สำหรับรันบน Linux
+24. ✅ **Phase 5 — Mobile Auto-Discovery & UX** (Complete)
+       - สแกนหา Server อัตโนมัติใน LAN (HTTP Subnet scanning) — แทนที่ UDP เพื่อรองรับ Expo Go/Managed Workflow
+       - เปลี่ยนการกรอก IP เป็น Manual option
+
+25. ✅ Phase 6 — Testing, Debug & UX Refinement
+       - แก้ปัญหาความปลอดภัย (`npm audit`) ทั้ง Mobile และ Desktop สำเร็จ
+       - เพิ่ม Feature Sort & View Modes ครบถ้วน
+       - **UI Hardening:** ปรับปรุง Accessibility (WCAG) และ Resilience เรียบร้อย
+       - **Simplify & Polish:** ลดความซับซ้อนของดีไซน์ (Minimalist) และปรับปรุง Micro-interactions
+       - **Performance:** ระบบ Caching สำหรับ Thumbnail (Disk Cache on Server + `expo-image` on Mobile), Optimize FlatList และ Background Pre-generation
+       - **Live Sync:** เพิ่มระบบตรวจสอบการเชื่อมต่อ (Live Check) เวลาปัดแอปทิ้ง และแก้ปัญหาชื่อมือถือไม่ขึ้นใน No-PIN mode
+       - **APK Hardening:** แก้ปัญหา Cleartext HTTP block และ Network permissions ใน Production build
+       - **Connection Resilience:** เพิ่ม Persistent JWT Secret (Desktop), ระบบ Timeout/AbortController (Mobile API) และการ Validate IP เพื่อความเสถียรสูงสุด
+       - **Icon Polish:** ปรับปรุง Adaptive Icon (Safe Zone) และ Splash Screen สำหรับ Android
+26. ✅ **Phase 7 — File Download & Storage Management** (Complete)
+       - เพิ่มระบบ Download Progress indicator (Visual feedback)
+       - บันทึกรูปภาพ/วิดีโอลง Gallery อัตโนมัติ (MediaLibrary)
+       - รองรับการเลือกที่จัดเก็บไฟล์อื่นๆ บน Android (Storage Access Framework)
+       - เพิ่ม Share Sheet สำหรับ iOS และเป็น Fallback
+       - ✅ Fix: ปรับปรุงการใช้งาน FileSystem API ให้รองรับเวอร์ชันใหม่ (V2/Next)
+
+## Build Outputs
+- **Desktop:** `desktop/dist/LocalDrop-1.0.0.AppImage`
+- **Mobile APK:** `mobile/build-1776964695210.apk`
