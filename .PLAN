@@ -43,6 +43,15 @@
        - รองรับการเลือกที่จัดเก็บไฟล์อื่นๆ บน Android (Storage Access Framework)
        - เพิ่ม Share Sheet สำหรับ iOS และเป็น Fallback
        - ✅ Fix: ปรับปรุงการใช้งาน FileSystem API ให้รองรับเวอร์ชันใหม่ (V2/Next)
+       - ✅ Git: อัปโหลดโปรเจกต์ขึ้น GitHub (https://github.com/Kimyobu/LocalDrop.git)
+
+27. 🔧 **Phase 8 — APK Connectivity Fix**
+       - **Root Cause:** `usesCleartextTraffic` ใน `app.json` section `android` ไม่ได้ apply จริงในกระบวนการ build
+       - **Fix:** ติดตั้ง `expo-build-properties` plugin + config `usesCleartextTraffic: true` → สร้าง `network_security_config.xml` ใน native layer
+       - ปิด `newArchEnabled` เพื่อหลีกเลี่ยง networking issues ของ RN 0.81 new arch บน APK
+       - ปรับปรุง Discovery Service (เพิ่ม probeDirectIP, retry, cleartext detection, logging)
+       - ปรับปรุง Connect Screen error messages ให้ชัดเจนขึ้น
+       - ⚠️ **ต้อง rebuild APK ใหม่** เพื่อให้ native config มีผล
 
 ## Build Outputs
 - **Desktop:** `desktop/dist/LocalDrop-1.0.0.AppImage`

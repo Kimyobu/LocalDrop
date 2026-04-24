@@ -11,7 +11,7 @@ import { router } from 'expo-router'
 import * as Network from 'expo-network'
 import * as Device from 'expo-device'
 import { setServer, pair, getStatus } from '../src/api/client'
-import { discoverServer } from '../src/services/discovery'
+import { discoverServer, probeDirectIP } from '../src/services/discovery'
 
 export default function ConnectScreen() {
   const [ip, setIp] = useState('')
@@ -31,8 +31,9 @@ export default function ConnectScreen() {
     setStep('scan')
     try {
       // เพิ่ม timeout ครอบ discoverServer ป้องกันค้างนาน
+      // เปลี่ยนแค่ส่วนนี้ใน scanNetwork()
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Scan timeout')), 10000)
+        setTimeout(() => reject(new Error('Scan timeout')), 45000) // 10s → 45s
       )
       const server = await Promise.race([discoverServer(), timeoutPromise])
       handleServerFound(server.ip, server.port, { name: server.name })
@@ -80,9 +81,18 @@ export default function ConnectScreen() {
       return Alert.alert('รูปแบบ IP ผิด', 'ตัวอย่าง: 192.168.0.100')
     }
 
+    const portNum = parseInt(port) || 8700
     setLoading(true)
     try {
-      setServer(trimmedIp, parseInt(port) || 8700)
+      // ลอง probe ตรงก่อน (มี retry ในตัว)
+      console.log(`[Connect] Probing ${trimmedIp}:${portNum}...`)
+      const probeResult = await probeDirectIP(trimmedIp, portNum)
+
+      if (!probeResult) {
+        throw new Error(`ไม่สามารถเชื่อมต่อ ${trimmedIp}:${portNum} ได้`)
+      }
+
+      setServer(trimmedIp, portNum)
       const status = await getStatus()
       setServerInfo(status)
 
@@ -100,14 +110,21 @@ export default function ConnectScreen() {
     } catch (err: any) {
       // clear state เมื่อ fail
       setServer('', 0)
-      Alert.alert(
-        'เชื่อมต่อไม่ได้',
-        `IP: ${trimmedIp}:${port}\n\nสาเหตุที่เป็นไปได้:\n` +
-        '• Desktop app ยังไม่ได้เปิด\n' +
-        '• มือถือกับคอมอยู่คนละ WiFi\n' +
-        '• Firewall block port 8700\n\n' +
-        `Error: ${err.message}`
-      )
+
+      const errMsg = err.message || ''
+      let helpText = `IP: ${trimmedIp}:${portNum}\n\n`
+      if (errMsg.includes('Cleartext') || errMsg.includes('CLEARTEXT')) {
+        helpText += '⚠️ Android บล็อก HTTP cleartext\n'
+        helpText += 'กรุณา rebuild APK ใหม่ (expo-build-properties ต้อง set usesCleartextTraffic)'
+      } else {
+        helpText += 'สาเหตุที่เป็นไปได้:\n'
+        helpText += '• Desktop app ยังไม่ได้เปิด\n'
+        helpText += '• มือถือกับคอมอยู่คนละ WiFi\n'
+        helpText += '• Firewall block port 8700\n\n'
+        helpText += `Error: ${errMsg}`
+      }
+
+      Alert.alert('เชื่อมต่อไม่ได้', helpText)
     } finally {
       setLoading(false)
     }
@@ -146,7 +163,7 @@ export default function ConnectScreen() {
         style={styles.formContainer}
       >
         <ScrollView contentContainerStyle={styles.formScroll} keyboardShouldPersistTaps="handled">
-          
+
           {step === 'scan' ? (
             /* ── Step 0: Scanning ──── */
             <View style={[styles.card, { alignItems: 'center', paddingVertical: 40 }]}>
@@ -155,7 +172,7 @@ export default function ConnectScreen() {
               <Text style={[styles.cardSubtitle, { textAlign: 'center' }]}>
                 Looking for LocalDrop desktop app on your local network
               </Text>
-              
+
               <TouchableOpacity
                 style={[styles.btn, { backgroundColor: '#F1F5F9', marginTop: 20, width: '100%', elevation: 0, shadowOpacity: 0 }]}
                 onPress={() => setStep('ip')}

@@ -1,7 +1,21 @@
 # 🆙 การอัปเดต — LocalDrop
 
+### [2026-04-24] — Fix: APK ไม่สามารถเชื่อมต่อ Server ได้
+- **Root Cause:** `usesCleartextTraffic` ใน `app.json` ไม่ถูก apply จริงใน native build → Android 9+ บล็อก HTTP ทั้งหมด
+- ติดตั้ง `expo-build-properties` plugin พร้อม config `usesCleartextTraffic: true` เพื่อสร้าง `network_security_config.xml` ใน native layer
+- ปิด `newArchEnabled` (RN 0.81 new arch มีปัญหา networking บน APK บางกรณี)
+- ปรับปรุง Discovery Service:
+  - เพิ่ม `probeDirectIP()` สำหรับ manual connection พร้อม retry อัตโนมัติ
+  - เพิ่ม HTTP cleartext detection ให้แจ้ง error ชัดเจนเมื่อ Android บล็อก
+  - เพิ่ม IP retry attempts (5→8) สำหรับ APK cold start
+  - ลด batch size (20→15), เพิ่ม timeout (1.5s→2s) เพิ่มความเสถียร
+  - ขยาย near-scan range (±3→±5)
+- ปรับปรุง Connect Screen ให้แจ้ง error เฉพาะเจาะจง (Cleartext vs Connection)
+
 ### [2026-04-24] — Phase 7: File Download & Storage
 - เพิ่มระบบ Download Progress indicator
 - บันทึกรูปภาพ/วิดีโอลง Gallery อัตโนมัติ
 - รองรับการเลือกที่จัดเก็บไฟล์อื่นๆ (Storage Access Framework)
 - แก้ไข Error FileSystem.cacheDirectory ให้รองรับ API เวอร์ชันใหม่ (V2)
+- อัปโหลดซอร์สโค้ดทั้งหมดขึ้น GitHub เรียบร้อยแล้ว
+
