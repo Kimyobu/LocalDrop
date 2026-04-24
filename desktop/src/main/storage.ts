@@ -15,6 +15,11 @@ let fileMetadata: Map<string, FileInfo> = new Map()
 let storagePath: string = './files'
 let metadataPath: string = './files/.metadata.json'
 
+// Track recently saved files to prevent file watcher from creating duplicates
+// When saveFile() writes a file to disk, the watcher may detect it as "new"
+// and create a second metadata entry. This set prevents that.
+const recentlySavedNames: Set<string> = new Set()
+
 /** Initialize storage with given path */
 export async function initStorage(path: string): Promise<void> {
   storagePath = path
@@ -103,6 +108,10 @@ export async function saveFile(
   const finalName = uniqueFilename(safeName)
   const filePath = join(storagePath, finalName)
 
+  // Mark this filename as recently saved BEFORE writing to disk
+  // so the file watcher won't create a duplicate metadata entry
+  recentlySavedNames.add(finalName)
+
   await writeFile(filePath, buffer)
 
   const info: FileInfo = {
@@ -119,6 +128,10 @@ export async function saveFile(
   fileMetadata.set(info.id, info)
   await saveMetadata()
 
+  // Keep the name in the set for a while, then clean up
+  // (watcher has a 500ms debounce, so 3s is more than enough)
+  setTimeout(() => recentlySavedNames.delete(finalName), 3000)
+
   console.log(`[Storage] Saved: ${finalName} (${formatBytes(info.size)})`)
   return info
 }
@@ -129,8 +142,10 @@ export async function listFiles(
   pageSize: number = 50,
   typeFilter?: string
 ): Promise<FileListResponse> {
-  // Always sync before listing to ensure disk consistency
-  await syncExternalFiles()
+  // NOTE: We no longer call syncExternalFiles() here.
+  // Syncing on every list call caused duplicate entries during rapid multi-file uploads
+  // because the watcher + sync would race with saveFile().
+  // External file sync is handled by: initStorage(), startFileWatcher(), and periodic sync.
 
   let files = Array.from(fileMetadata.values())
 
@@ -352,6 +367,13 @@ export function startFileWatcher(): void {
         }
 
         // CASE 2: New file added to disk
+        // Skip if this file was recently saved by the API (saveFile)
+        // This prevents the watcher from creating a duplicate metadata entry
+        if (recentlySavedNames.has(filename)) {
+          console.log(`[Storage] Watcher: skipping recently-saved file: ${filename}`)
+          return
+        }
+
         const isTracked = Array.from(fileMetadata.values()).some((f) => f.name === filename)
         if (isTracked) return
 

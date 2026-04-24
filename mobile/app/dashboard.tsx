@@ -154,6 +154,20 @@ export default function DashboardScreen() {
   const [sortBy, setSortBy] = useState<'date' | 'size' | 'type' | 'name'>('date')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
+  // Ref to track uploading state inside WebSocket callback (avoids stale closure)
+  const uploadingRef = useRef(false)
+  useEffect(() => { uploadingRef.current = uploading }, [uploading])
+
+  // Debounced fetch — coalesces rapid WebSocket events into a single API call
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const debouncedFetchFiles = useCallback(() => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current)
+    debounceTimer.current = setTimeout(() => {
+      fetchFiles()
+      debounceTimer.current = null
+    }, 500)
+  }, [])
+
   // Redirect if not connected
   useEffect(() => {
     if (!isConnected()) {
@@ -163,7 +177,11 @@ export default function DashboardScreen() {
 
     connectWebSocket((msg) => {
       if (msg.event === 'file_uploaded' || msg.event === 'file_deleted') {
-        fetchFiles()
+        // Don't re-fetch while we're uploading — the upload handler
+        // already calls fetchFiles() when it finishes
+        if (!uploadingRef.current) {
+          debouncedFetchFiles()
+        }
       }
     })
 

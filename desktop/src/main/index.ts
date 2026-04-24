@@ -130,19 +130,34 @@ function setupIPC(): void {
   // Upload files from desktop (via dialog or drag & drop)
   ipcMain.handle('upload-files', async (_event, filePaths: string[]) => {
     const results: { success: boolean; name: string; error?: string }[] = []
+    const savedFiles: any[] = []
     for (const fp of filePaths) {
       try {
-        const { basename, extname } = require('path')
-        const { lookup } = require('mime-types')
-        const name = basename(fp)
+        const { basename: bn } = require('path')
+        const { lookup: lu } = require('mime-types')
+        const name = bn(fp)
         const buffer = readFileSync(fp)
-        const mimeType = lookup(name) || 'application/octet-stream'
-        await saveFile(buffer, name, mimeType, 'Desktop')
+        const mimeType = lu(name) || 'application/octet-stream'
+        const info = await saveFile(buffer, name, mimeType, 'Desktop')
+        savedFiles.push(info)
         results.push({ success: true, name })
       } catch (err: any) {
         results.push({ success: false, name: fp, error: err.message })
       }
     }
+
+    // Broadcast to mobile clients & generate thumbnails
+    // (the file watcher now skips recently-saved files to prevent duplicates)
+    for (const info of savedFiles) {
+      const filePath = getFilePath(info.id)
+      if (filePath) {
+        generateThumbnail(filePath, info.mimeType, info.id).catch(() => {})
+      }
+      import('./websocket').then(({ broadcast }) => {
+        broadcast('file_uploaded', info)
+      })
+    }
+
     return results
   })
 

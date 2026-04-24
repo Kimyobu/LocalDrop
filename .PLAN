@@ -53,6 +53,12 @@
        - ปรับปรุง Connect Screen error messages ให้ชัดเจนขึ้น
        - ⚠️ **ต้อง rebuild APK ใหม่** เพื่อให้ native config มีผล
 
+28. ✅ **Bugfix — Multi-file Upload Duplicate**
+       - **Root Cause:** อัปโหลดหลายไฟล์จากมือถือ → `saveFile()` เขียนไฟล์ลง disk → File Watcher ตรวจพบ → สร้าง metadata ซ้ำ (คนละ UUID) → ทั้ง desktop + mobile เห็นไฟล์ duplicate
+       - **สาเหตุเสริม:** `listFiles()` เรียก `syncExternalFiles()` ทุกครั้ง → race condition กับ upload, WebSocket broadcast กลับไปหา uploader → fetch ซ้ำ
+       - **Fix:** เพิ่ม `recentlySavedNames` set ป้องกัน watcher duplicate, เอา sync ออกจาก listFiles, exclude uploader จาก broadcast, เพิ่ม debounce บน mobile
+
+
 ## Build Outputs
 - **Desktop:** `desktop/dist/LocalDrop-1.0.0.AppImage`
 - **Mobile APK:** `mobile/build-1776964695210.apk`

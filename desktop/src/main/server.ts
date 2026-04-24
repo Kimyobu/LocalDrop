@@ -218,6 +218,7 @@ function createApp(): express.Application {
     }
 
     const deviceName = (req as any).deviceName || 'Unknown'
+    const deviceId = (req as any).deviceId || ''
     const saved = []
     const errors: string[] = []
 
@@ -245,12 +246,16 @@ function createApp(): express.Application {
           const decodedPath = filePath.includes('%') ? decodeURIComponent(filePath) : filePath
           generateThumbnail(decodedPath, info.mimeType, info.id).catch(() => { })
         }
-
-        broadcast('file_uploaded', info)
-        notifyRenderer('file-uploaded', info)
       } catch {
         errors.push(`${originalName}: Upload failed`)
       }
+    }
+
+    // Broadcast ONCE after all files are saved (not per-file)
+    // Exclude the uploader's own device — they already know about the upload
+    for (const info of saved) {
+      broadcast('file_uploaded', info, deviceId)
+      notifyRenderer('file-uploaded', info)
     }
 
     res.json({ success: true, files: saved, errors: errors.length > 0 ? errors : undefined })

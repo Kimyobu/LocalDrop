@@ -1,5 +1,12 @@
 # 🆙 การอัปเดต — LocalDrop
 
+### [2026-04-24] — Fix: อัปโหลดหลายไฟล์จากมือถือ เกิด Duplicate
+- แก้ `storage.ts`: เพิ่ม `recentlySavedNames` ป้องกัน File Watcher สร้าง metadata ซ้ำ
+- แก้ `storage.ts`: เอา `syncExternalFiles()` ออกจาก `listFiles()` ป้องกัน race condition
+- แก้ `server.ts`: Broadcast exclude uploader's device (ไม่ส่ง event กลับคนอัปโหลดเอง)
+- แก้ `index.ts`: เพิ่ม broadcast + thumbnail ใน desktop upload handler (เพราะ watcher ถูกบล็อกแล้ว)
+- แก้ `dashboard.tsx`: เพิ่ม debounce สำหรับ WebSocket events + ข้าม fetch ระหว่าง upload
+
 ### [2026-04-24] — Fix: APK ไม่สามารถเชื่อมต่อ Server ได้
 - **Root Cause:** `usesCleartextTraffic` ใน `app.json` ไม่ถูก apply จริงใน native build → Android 9+ บล็อก HTTP ทั้งหมด
 - ติดตั้ง `expo-build-properties` plugin พร้อม config `usesCleartextTraffic: true` เพื่อสร้าง `network_security_config.xml` ใน native layer
